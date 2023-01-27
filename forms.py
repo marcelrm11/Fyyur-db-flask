@@ -1,18 +1,20 @@
 from datetime import datetime
 from flask_wtf import Form
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms.validators import DataRequired, AnyOf, URL, Regexp, Optional, ValidationError
+from app import Venue
 
 class ShowForm(Form):
     artist_id = StringField(
-        'artist_id'
+        'artist_id', validators=[DataRequired()]
     )
     venue_id = StringField(
-        'venue_id'
+        'venue_id', validators=[DataRequired()]
     )
     start_time = DateTimeField(
         'start_time',
-        validators=[DataRequired()],
+        validators=[DataRequired(), 
+        Regexp(r'^(20\d{2})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]) (0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$')],
         default= datetime.today()
     )
 
@@ -20,6 +22,11 @@ class VenueForm(Form):
     name = StringField(
         'name', validators=[DataRequired()]
     )
+    def validate_name(form, field):
+        existing_venue = Venue.query.filter_by(name=field.data).first()
+        if existing_venue:
+            raise ValidationError('A venue with that name already exists.')
+
     city = StringField(
         'city', validators=[DataRequired()]
     )
@@ -83,10 +90,11 @@ class VenueForm(Form):
         'address', validators=[DataRequired()]
     )
     phone = StringField(
-        'phone'
+        'phone', 
+        validators=[Optional(), Regexp(r'^[0-9]{3}-[0-9]{3}-[0-9]{4}$')]
     )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[Optional(), URL()]
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction
@@ -114,10 +122,10 @@ class VenueForm(Form):
         ]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(), URL()]
     )
     website_link = StringField(
-        'website_link'
+        'website_link', validators=[Optional(), URL()]
     )
 
     seeking_talent = BooleanField( 'seeking_talent' )
@@ -136,6 +144,7 @@ class ArtistForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
+        # TODO implement validation logic for state
         'state', validators=[DataRequired()],
         choices=[
             ('AL', 'AL'),
@@ -192,13 +201,14 @@ class ArtistForm(Form):
         ]
     )
     phone = StringField(
-        # TODO implement validation logic for state
-        'phone'
+        'phone',
+        validators=[Regexp(r'^[0-9]{3}-[0-9]{3}-[0-9]{4}$')]
     )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[Optional(), URL()]
     )
     genres = SelectMultipleField(
+        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=[
             ('Alternative', 'Alternative'),
@@ -223,12 +233,11 @@ class ArtistForm(Form):
         ]
      )
     facebook_link = StringField(
-        # TODO implement enum restriction
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[Optional(), URL()]
      )
 
     website_link = StringField(
-        'website_link'
+        'website_link', validators=[Optional(), URL()]
      )
 
     seeking_venue = BooleanField( 'seeking_venue' )

@@ -281,6 +281,9 @@ def create_venue_submission():
                 seeking_talent=form.seeking_talent.data,
                 seeking_description=form.seeking_description.data
             )
+            # alternatively:
+            # venue = Venue()
+            # form.populate_obj(venue)
             db.session.add(venue)
             db.session.commit()
         # on successful db insert, flash success
